@@ -18,16 +18,6 @@ from telegram.ext import (
     ConversationHandler, MessageHandler, filters
 )
 
-async def debug_callback(update, context):
-    query = update.callback_query
-    print(f"🔔 CALLBACK ПОЛУЧЕН: {query.data}")
-    print(f"   От пользователя: {query.from_user.id}")
-    print(f"   Сообщение: {query.message.message_id}")
-    await query.answer("✅ Получено")
-    # Не возвращаем ничего, чтобы другие обработчики тоже сработали
-
-app.add_handler(CallbackQueryHandler(debug_callback))
-
 
 from bot.handlers.admin_panel import (
     admin_panel, 
@@ -326,7 +316,19 @@ def main():
     app.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, 
         admin_add_user_handle
+        
     ))
+
+    # ДЕБАГ-ОБРАБОТЧИК ==========
+    async def debug_callback(update, context):
+        query = update.callback_query
+        print(f"🔔 CALLBACK ПОЛУЧЕН: {query.data}")
+        print(f"   От пользователя: {query.from_user.id}")
+        print(f"   Сообщение: {query.message.message_id}")
+        await query.answer("✅ Получено")
+    
+    app.add_handler(CallbackQueryHandler(debug_callback))
+    # ====================================================
 
     print("🚀 Бот запущен! Отправьте /start")
     print("📋 Доступные команды:")
