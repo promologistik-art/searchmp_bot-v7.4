@@ -144,9 +144,18 @@ async def update_commissions_command(update, context):
 
 async def post_init(application: Application):
     """Действия после инициализации бота"""
-    await set_bot_commands(application)
+        
+    # === ГАРАНТИРУЕМ ПОЛУЧЕНИЕ ВСЕХ ТИПОВ ОБНОВЛЕНИЙ ===
+    try:
+        await application.bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook удален, все типы updates разрешены")
+    except Exception as e:
+        logger.warning(f"⚠️ Не удалось удалить webhook: {e}")
+    # ===================================================
     
-    # === НОВОЕ: Автоматическая загрузка комиссий при старте (только если модуль доступен) ===
+    await set_bot_commands(application)
+
+    # === Автоматическая загрузка комиссий при старте (только если модуль доступен) ===
     if COMMISSION_LOADER_AVAILABLE:
         try:
             logger.info("🔄 Проверяю наличие файла с комиссиями при старте...")
