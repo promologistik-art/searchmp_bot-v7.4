@@ -17,6 +17,18 @@ from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
     ConversationHandler, MessageHandler, filters
 )
+
+async def debug_callback(update, context):
+    query = update.callback_query
+    print(f"🔔 CALLBACK ПОЛУЧЕН: {query.data}")
+    print(f"   От пользователя: {query.from_user.id}")
+    print(f"   Сообщение: {query.message.message_id}")
+    await query.answer("✅ Получено")
+    # Не возвращаем ничего, чтобы другие обработчики тоже сработали
+
+app.add_handler(CallbackQueryHandler(debug_callback))
+
+
 from bot.handlers.admin_panel import (
     admin_panel, 
     admin_users_list, 
