@@ -82,8 +82,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Помощь"""
-    from config import ADMIN_USERNAMES
-    admin_username = ADMIN_USERNAMES[0] if ADMIN_USERNAMES else "admin"
+    admin_username = ADMIN_USERNAMES[0] if ADMIN_USERNAMES else "silverzen"
+    
     await update.message.reply_text(
         "📚 **Как работать с ботом:**\n\n"
         "**1. Подготовка**\n"
@@ -91,13 +91,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• /upload - скачать шаблон Excel и загрузить свои категории\n\n"
         "**2. Настройка поиска**\n"
         "• /criteria - настроить параметры анализа\n\n"
-        "• /upload - снова скачать шаблон Excel и отметить свои категории\n\n"
         "**3. Выбор категорий**\n"
         "• /list - выбрать категории для анализа\n"
         "   🟣 - уже смотрели\n"
         "   ✅ - выбрали сейчас\n\n"
         "**4. Анализ**\n"
-        "• После • /upload и загрузки вашего варианта, бот начинает анализировать"
+        "• После выбора категорий нажмите 'Анализировать'\n"
         "• Получите Excel-файл с результатами\n\n"
         "**Команды:**\n"
         "/start - главное меню\n"
@@ -106,7 +105,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/criteria - настройки\n"
         "/list - категории\n"
         "/upload - свои категории\n"
-        "/update - обновить категории"
+        "/update - обновить категории\n\n"
         f"📩 **Вопросы и предложения:** @{admin_username}",
         parse_mode='Markdown'
     )
@@ -272,16 +271,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     data = query.data
-    print(f"button_handler получил: {data}")  # ОТЛАДКА
+    print(f"button_handler получил: {data}")
 
-    # ПЕРЕНАПРАВЛЯЕМ КНОПКИ ПОСЛЕ АНАЛИЗА
-    if data.startswith('after_'):
-        # Перенаправляем в after_analysis_handler
-        from bot.handlers.start_handler import after_analysis_handler
-        await after_analysis_handler(update, context)
-        return
-
-    # ДАЛЬШЕ ИДЕТ ОБЫЧНАЯ ЛОГИКА (уже без повторного определения data)
     if data.startswith('page_'):
         page = int(data.replace('page_', ''))
         await show_categories_page(update, context, page)
@@ -319,14 +310,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         from config import ADMIN_IDS, ADMIN_USERNAMES
         await analyze_command(update, context, ADMIN_IDS, ADMIN_USERNAMES)
 
-        
+
 async def after_analysis_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик кнопок после анализа"""
     query = update.callback_query
     await query.answer()
 
     import traceback
-    from telegram import Update
     from config import UPLOAD_CATEGORIES
 
     try:
@@ -335,21 +325,14 @@ async def after_analysis_handler(update: Update, context: ContextTypes.DEFAULT_T
         if query.data == "after_upload":
             print("🟢 after_upload: начало")
 
-            # Очищаем данные
             context.user_data.clear()
-
-            # Удаляем сообщение с кнопками
             await query.message.delete()
-
-            # Отправляем сообщение о начале загрузки
             await query.message.reply_text("📤 **Подготавливаю загрузку файла...**")
 
-            # Запускаем upload_command
             from bot.handlers.upload_handler import upload_command
 
             chat_id = query.message.chat_id
 
-            # Создаем простой объект message
             class SimpleMessage:
                 def __init__(self, chat_id, from_user):
                     self.chat_id = chat_id
@@ -366,7 +349,6 @@ async def after_analysis_handler(update: Update, context: ContextTypes.DEFAULT_T
                 async def reply_document(self, **kwargs):
                     return await query.message.reply_document(**kwargs)
 
-            # Создаем fake update как объект
             fake_update = type('FakeUpdate', (), {
                 'message': SimpleMessage(chat_id, query.from_user),
                 'effective_user': query.from_user,
@@ -381,21 +363,14 @@ async def after_analysis_handler(update: Update, context: ContextTypes.DEFAULT_T
         elif query.data == "after_start":
             print("🟢 after_start: начало")
 
-            # Очищаем данные
             context.user_data.clear()
-
-            # Удаляем сообщение с кнопками
             await query.message.delete()
-
-            # Отправляем сообщение о возврате
             await query.message.reply_text("🔄 **Возвращаюсь в начало...**")
 
-            # Запускаем start
             from bot.handlers.start_handler import start
 
             chat_id = query.message.chat_id
 
-            # Создаем простой объект message
             class SimpleMessage:
                 def __init__(self, chat_id, from_user):
                     self.chat_id = chat_id
@@ -409,7 +384,6 @@ async def after_analysis_handler(update: Update, context: ContextTypes.DEFAULT_T
                 async def reply_text(self, text, **kwargs):
                     return await query.message.reply_text(text, **kwargs)
 
-            # Создаем fake update
             fake_update = type('FakeUpdate', (), {
                 'message': SimpleMessage(chat_id, query.from_user),
                 'effective_user': query.from_user,
@@ -516,7 +490,6 @@ async def upload_button_handler(update: Update, context: ContextTypes.DEFAULT_TY
                 f"🚀 **Запускаю анализ...**"
             )
 
-            # Автоматически запускаем анализ
             from services.analysis_service import analyze_command
             from config import ADMIN_IDS, ADMIN_USERNAMES
             await analyze_command(update, context, ADMIN_IDS, ADMIN_USERNAMES)
