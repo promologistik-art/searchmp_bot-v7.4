@@ -82,6 +82,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Помощь"""
+    from config import ADMIN_USERNAMES
+    admin_username = ADMIN_USERNAMES[0] if ADMIN_USERNAMES else "admin"
     await update.message.reply_text(
         "📚 **Как работать с ботом:**\n\n"
         "**1. Подготовка**\n"
@@ -104,7 +106,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/criteria - настройки\n"
         "/list - категории\n"
         "/upload - свои категории\n"
-        "/update - обновить категории",
+        "/update - обновить категории"
+        f"📩 **Вопросы и предложения:** @{admin_username}",
         parse_mode='Markdown'
     )
 
